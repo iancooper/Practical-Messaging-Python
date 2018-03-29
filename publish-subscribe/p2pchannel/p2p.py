@@ -29,7 +29,7 @@ class p2p:
     def __enter__(self) -> 'p2p':
         """
         We use a context manager as resources like connections need to be closed
-        We return self as the channel is also the send/receive point in this point-to-point scenario
+        We return self as the channel is also the send/receive point in this publish-subscribe scenario
         :return: the point-to-point channel
         """
         self._connection = pika.BlockingConnection(parameters=self._connection_parameters)
