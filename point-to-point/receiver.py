@@ -5,7 +5,7 @@ def run():
     with p2p("hello-p2p") as channel:
         message = channel.receive()
         if message is not None:
-            print("Received message %s", message)
+            print("Received message", message)
         else:
             print("Did not receive message")
 
