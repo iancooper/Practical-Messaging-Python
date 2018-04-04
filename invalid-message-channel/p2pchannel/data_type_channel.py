@@ -2,7 +2,7 @@ import pika
 from typing import Callable
 
 exchange_name = "practical-messaging-datatype"
-invalid_message_exchange_name = "practical-messaging-datatype-invalid"
+invalid_message_exchange_name = "practical-messaging-invalid"
 
 
 class Request:
@@ -52,6 +52,7 @@ class Producer:
 
         self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
         self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
+        self._channel.queue_bind(exchange=invalid_message_exchange_name, routing_key=invalid_routing_key, queue=invalid_queue_name)
 
         return self
 
@@ -89,14 +90,26 @@ class Consumer:
         """
         We use a context manager as resources like connections need to be closed
         We return self as the channel is also the send/receive point in this point-to-point scenario
+
+        We establish an exchange to use for invalid messages (RMQ confusingly calls this dead-letter) and a routing key
+        to use when we reject messages to this queue, so that we can create a subscribing queue on the exchange that picks
+        up the invalid messages.
         :return: the point-to-point channel
         """
         self._connection = pika.BlockingConnection(parameters=self._connection_parameters)
         self._channel = self._connection.channel()
         self._channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=False, auto_delete=False)
 
-        self._channel.queue_declare(queue=self._queue_name, durable=False, exclusive=False, auto_delete=False)
+        invalid_routing_key = 'invalid.' + self._routing_key
+        invalid_queue_name = invalid_routing_key
+
+        args = {'x-dead-letter-exchange': invalid_message_exchange_name, 'x-dead-letter-routing-key': invalid_routing_key}
+
+        self._channel.queue_declare(queue=self._queue_name, durable=False, exclusive=False, auto_delete=False, arguments=args)
         self._channel.queue_bind(exchange=exchange_name, routing_key=self._routing_key, queue=self._queue_name)
+
+        self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
+        self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
 
         return self
 
@@ -114,13 +127,16 @@ class Consumer:
         We ignored this in prior exercises, because 'it just worked' but now we care about it
         :return: The message or None if we could not read from the queue
         """
-        method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, no_ack=True)
+        method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, no_ack=False)
         if method_frame is not None:
             body_text = body.decode("unicode_escape")
-            request = self._mapper_func(body_text)
-            return request
-        else:
-            return None
+            try:
+                request = self._mapper_func(body_text)
+                return request
+            except TypeError:
+                self._channel.basic_nack(delivery_tag=method_frame.delivery_tag, requeue=False)
+
+        return None
 
 
 

@@ -5,7 +5,7 @@ from model.greeting import Greeting
 
 
 def map_from_message(message_body: str) -> Greeting:
-    return Greeting(message_body)
+    raise TypeError("Error while parsing message")
 
 
 def run():
