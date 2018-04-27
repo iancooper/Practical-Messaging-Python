@@ -53,6 +53,7 @@ class p2p:
         """
         method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, no_ack=True)
         if method_frame is not None:
+            self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
             return body
         else:
             return None
