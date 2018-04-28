@@ -4,7 +4,7 @@ from queue import Empty, Queue
 import time
 from typing import Callable, Type
 
-exchange_name = "practical-messaging-datatype"
+exchange_name = "practical-messaging-polling-consumer"
 invalid_message_exchange_name = "practical-messaging-invalid"
 
 
@@ -79,8 +79,6 @@ class Producer:
 
 
 class Consumer:
-
-    exchange_name = "practical-messaging-fanout"
 
     def __init__(self, request_class: Type[Request], mapper_func: Callable[[str], Request], host_name: str='localhost') -> None:
         """

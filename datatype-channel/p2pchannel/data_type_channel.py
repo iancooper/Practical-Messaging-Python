@@ -60,8 +60,6 @@ class Producer:
 
 class Consumer:
 
-    exchange_name = "practical-messaging-fanout"
-
     def __init__(self, request_class: Request, mapper_func: Callable[[str], Request], host_name: str='localhost') -> None:
         """
         We assume a number of defaults: usr:guest pwd:guest port:5672 vhost: /

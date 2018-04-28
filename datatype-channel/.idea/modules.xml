@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/point-to-point.iml" filepath="$PROJECT_DIR$/.idea/point-to-point.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/datatype-channel.iml" filepath="$PROJECT_DIR$/.idea/datatype-channel.iml" />
     </modules>
   </component>
 </project>

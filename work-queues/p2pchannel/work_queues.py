@@ -4,7 +4,7 @@ from queue import Empty, Queue
 import time
 from typing import Callable, Type
 
-exchange_name = "practical-messaging-datatype"
+exchange_name = "practical-messaging-work-queue"
 invalid_message_exchange_name = "practical-messaging-invalid"
 
 
@@ -26,7 +26,7 @@ class Producer:
         :param mapper_func: The function that maps
         :param host_name: The name of the host
         """
-        self._queue_name = request_class.__name__
+        self._queue_name = "work_queue." + request_class.__name__
         self._routing_key = self._queue_name
         self._mapper_func = mapper_func
         self._connection_parameters = pika.ConnectionParameters(host=host_name)
@@ -80,13 +80,11 @@ class Producer:
 
 class Consumer:
 
-    exchange_name = "practical-messaging-fanout"
-
     def __init__(self, request_class: Type[Request], mapper_func: Callable[[str], Request], host_name: str='localhost') -> None:
         """
         We assume a number of defaults: usr:guest pwd:guest port:5672 vhost: /
         """
-        self._queue_name = request_class.__name__
+        self._queue_name = "work_queue." + request_class.__name__
         self._routing_key = self._queue_name
         self._mapper_func = mapper_func
 

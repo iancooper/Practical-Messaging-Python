@@ -1,5 +1,8 @@
 import json
+import sys
 import time
+from typing import Dict
+from uuid import UUID
 
 from p2pchannel.work_queues import Producer
 from model.greeting import Greeting
@@ -27,8 +30,9 @@ def run():
                 print("Sent Message: ", json.dumps(vars(greeting)))
                 loop += 1
 
-                if loop % 100 == 0:
+                if loop % 10 == 0:
                     time.sleep(5)
+
     except KeyboardInterrupt:
         sys.exit(1)
 

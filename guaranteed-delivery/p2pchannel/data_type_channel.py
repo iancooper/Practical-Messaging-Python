@@ -1,7 +1,7 @@
 import pika
 from typing import Callable
 
-exchange_name = "practical-messaging-datatype"
+exchange_name = "practical-messaging-guaranteed"
 invalid_message_exchange_name = "practical-messaging-invalid"
 
 
@@ -76,8 +76,6 @@ class Producer:
 
 
 class Consumer:
-
-    exchange_name = "practical-messaging-fanout"
 
     def __init__(self, request_class: Request, mapper_func: Callable[[str], Request], host_name: str='localhost') -> None:
         """
