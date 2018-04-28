@@ -3,12 +3,13 @@ from queue import Queue
 from threading import Thread
 import time
 from typing import Dict
+from uuid import UUID
 
-from p2pchannel.pipes_and_filters import polling_consumer, cancellation_token
-from model.greeting import Greeting
+from p2pchannel.pipes_and_filters import filter, cancellation_token
+from model.greeting import Greeting, EnrichedGreeting
 
 
-def map_from_message(message_body: str) -> Greeting:
+def deserialize_message(in_message: str) -> Greeting:
     def _unserialize_instance(d: Dict) -> object:
         for key, value in d.items():
             if isinstance(value, str):  # We need to check if the string on the wire is actually a UUID, by conversion
@@ -21,12 +22,30 @@ def map_from_message(message_body: str) -> Greeting:
         return greeting
 
     greeting = Greeting()
-    return json.loads(message_body, object_hook=_unserialize_instance)
+    return json.loads(in_message, object_hook=_unserialize_instance)
+
+
+def serialize_message(out_message: EnrichedGreeting) -> str:
+    def _serialize_instance(obj: object) -> Dict:
+        d = {}
+        d.update(vars(obj))
+        for key, value in d.items():
+            if isinstance(value, UUID):  # json does not know how to serliaze a UUID, so convince it is a string instead
+                d[key] = str(value)
+        return d
+
+    return json.dumps(out_message, default=_serialize_instance)
+
+
+def enrich(in_request: Greeting) -> EnrichedGreeting:
+    enriched = EnrichedGreeting(in_request.salutation, " Clarissa Harlowe")
+    return enriched
 
 
 def run():
     cancellation_queue = Queue()
-    polling_loop = Thread(target=polling_consumer, args=(cancellation_queue, Greeting, map_from_message, 'localhost'), daemon=True)
+    polling_loop = Thread(target=filter, args=(cancellation_queue, Greeting, deserialize_message,
+                           EnrichedGreeting, enrich, serialize_message, 'localhost'), daemon=True)
 
     polling_loop.start()
 

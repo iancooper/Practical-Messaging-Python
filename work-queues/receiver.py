@@ -3,6 +3,7 @@ from queue import Queue
 from threading import Thread
 import time
 from typing import Dict
+from uuid import UUID
 
 from p2pchannel.work_queues import polling_consumer, cancellation_token
 from model.greeting import Greeting
