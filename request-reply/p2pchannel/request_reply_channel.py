@@ -6,7 +6,7 @@ import time
 from typing import Callable, Type
 from uuid import UUID, uuid4
 
-exchange_name = "practical-messaging-datatype"
+exchange_name = "practical-messaging-request-reply"
 invalid_message_exchange_name = "practical-messaging-invalid"
 
 

@@ -3,7 +3,7 @@ import pika
 
 class p2p:
 
-    exchange_name = "practical-messaging"
+    exchange_name = "practical-messaging-p2p"
 
     def __init__(self, queue_name: str, host_name: str='localhost') -> None:
         """
