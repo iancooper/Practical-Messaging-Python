@@ -4,7 +4,7 @@ from queue import Empty, Queue
 import time
 from typing import Callable, Type
 
-exchange_name = "practical-messaging-work-queue"
+exchange_name = "practical-messaging-work-queues"
 invalid_message_exchange_name = "practical-messaging-invalid"
 
 
