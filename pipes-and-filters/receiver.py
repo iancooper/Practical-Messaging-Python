@@ -4,7 +4,7 @@ from threading import Thread
 import time
 from typing import Dict
 
-from p2pchannel.work_queues import polling_consumer, cancellation_token
+from p2pchannel.pipes_and_filters import polling_consumer, cancellation_token
 from model.greeting import Greeting
 
 

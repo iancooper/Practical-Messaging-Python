@@ -26,7 +26,7 @@ class Response:
 class Producer:
 
     def __init__(self,
-                 request_class: Request,
+                 request_class: Type[Request],
                  serializer_func: Callable[[Request], str],
                  deserializer_func: Callable[[str], Response],
                  host_name: str= 'localhost') -> None:

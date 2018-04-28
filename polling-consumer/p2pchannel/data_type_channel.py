@@ -14,7 +14,7 @@ class Request:
 
 class Producer:
 
-    def __init__(self, request_class: Request, mapper_func: Callable[[Request], str], host_name: str='localhost') -> None:
+    def __init__(self, request_class: Type[Request], mapper_func: Callable[[Request], str], host_name: str='localhost') -> None:
         """
         We assume a number of defaults: usr:guest pwd:guest port:5672 vhost: /
         We use the request class to get the name of the routing key. We could use any approach to agree a routing key

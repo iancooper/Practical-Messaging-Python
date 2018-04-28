@@ -1,7 +1,10 @@
+import json
 import pika
+from queue import Empty, Queue
+import time
 from typing import Callable, Type
 
-exchange_name = "practical-messaging-guaranteed"
+exchange_name = "practical-messaging-work-queue"
 invalid_message_exchange_name = "practical-messaging-invalid"
 
 
@@ -23,7 +26,7 @@ class Producer:
         :param mapper_func: The function that maps
         :param host_name: The name of the host
         """
-        self._queue_name = request_class.__name__
+        self._queue_name = "work_queue." + request_class.__name__
         self._routing_key = self._queue_name
         self._mapper_func = mapper_func
         self._connection_parameters = pika.ConnectionParameters(host=host_name)
@@ -81,7 +84,7 @@ class Consumer:
         """
         We assume a number of defaults: usr:guest pwd:guest port:5672 vhost: /
         """
-        self._queue_name = request_class.__name__
+        self._queue_name = "work_queue." + request_class.__name__
         self._routing_key = self._queue_name
         self._mapper_func = mapper_func
 
@@ -106,12 +109,15 @@ class Consumer:
 
         args = {'x-dead-letter-exchange': invalid_message_exchange_name, 'x-dead-letter-routing-key': invalid_routing_key}
 
-        # If we are going to use persistent messages it makes sense to have a durable queue definition
+        # We want a durable queue definition, so that someone queues message to recipients, even if they are not there
         self._channel.queue_declare(queue=self._queue_name, durable=True, exclusive=False, auto_delete=False, arguments=args)
         self._channel.queue_bind(exchange=exchange_name, routing_key=self._routing_key, queue=self._queue_name)
 
         self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
         self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
+
+        # We set this to enforce fairness amongst consumers
+        self._channel.basic_qos(prefetch_count=1)
 
         return self
 
@@ -141,5 +147,74 @@ class Consumer:
 
         return None
 
+
+cancellation_token = object()
+
+
+def polling_consumer(cancellation_queue: Queue, request_class: Type[Request], mapper_func: Callable[[str], Request], host_name: str= 'localhost') -> None:
+    """
+    Intended to be called from a thread, we consumer messages in a loop, with a delay between reads from the queue in order
+    to allow the CPU to service other requests, including the supervisor which may want to signal that we should quit
+    We use a queue to signal cancellation - the cancellation token is put into the queue and a consumer checks for it
+    after every loop
+    :param cancellation_queue: Used for inter-process communication, push a cancellation token to this to terminate
+    :param request_class: What is the type of message we expect to receive on this channel
+    :param mapper_func: How do we serialize messages from the wire into a python object
+    :param host_name: Where is the RMQ exchange
+    :return:
+    """
+    with Consumer(request_class, mapper_func, host_name) as channel:
+        while True:
+            message = channel.receive()
+            if message is not None:
+                print("Received message", json.dumps(vars(message)))
+            else:
+                print("Did not receive message")
+
+            # This will block whilst it waits for a cancellation token; we don't want to wait long
+            try:
+                token = cancellation_queue.get(block=True, timeout=0.1)
+                if token is cancellation_token:
+                    print("Stop instruction received")
+                    break
+            except Empty:
+                time.sleep(0.5)  # yield between messages
+                continue
+
+
+def filter(cancellation_queue: Queue, input_class: Type[Request], deserializer_func: Callable[[str], Request],
+           output_class: Type[Request], operation_func: Callable[[Request], Request], serializer_func: Callable[[Request], str],
+           host_name: str= 'localhost') -> None:
+    """
+    Intended to be called from a thread, we consumer messages in a loop, with a delay between reads from the queue in order
+    to allow the CPU to service other requests, including the supervisor which may want to signal that we should quit
+    We use a queue to signal cancellation - the cancellation token is put into the queue and a consumer checks for it
+    after every loop
+    :param cancellation_queue: Used for inter-process communication, push a cancellation token to this to terminate
+    :param input_class: What is the type of message we expect to receive on this channel
+    :param deserializer_func: How do we serialize messages from the wire into a python object
+    :param host_name: Where is the RMQ exchange
+    :return:
+    """
+    with Consumer(input_class, deserializer_func, host_name) as in_channel:
+        while True:
+            in_message = in_channel.receive()
+            if in_message is not None:
+                with Producer(output_class, serializer_func) as out_channel:
+                    out_message = operation_func(in_message)
+                    out_channel.send(out_message)
+                    print("Sent Message: ", json.dumps(vars(out_message)))
+            else:
+                print("Did not receive message")
+
+            # This will block whilst it waits for a cancellation token; we don't want to wait long
+            try:
+                token = cancellation_queue.get(block=True, timeout=0.1)
+                if token is cancellation_token:
+                    print("Stop instruction received")
+                    break
+            except Empty:
+                time.sleep(0.5)  # yield between messages
+                continue
 
 
