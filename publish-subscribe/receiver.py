@@ -1,12 +1,12 @@
 import time
 
-from p2pchannel.p2p import p2p, ChannelType
+from pubsubchannel.pubsub import pubsub, ChannelType
 
 
 def run():
     while True:
         try:
-            with p2p(ChannelType.Subscriber) as channel:
+            with pubsub(ChannelType.Subscriber) as channel:
                 print("Pausing for breath...")
                 time.sleep(4)
 
