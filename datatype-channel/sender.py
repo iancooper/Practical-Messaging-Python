@@ -5,7 +5,7 @@ from model.greeting import Greeting
 
 
 def map_to_message(greeting: Greeting) -> str:
-    return greeting.greet()
+    # TODO: serialize a greeting
 
 
 def run():

@@ -54,7 +54,7 @@ class Producer:
         We use the basic publish approach to sending over the channel. The routing key is the type
         :param message: The message we want to send
         """
-        message_body = self._mapper_func(message)
+        # TODO: serialize the message
         self._channel.basic_publish(exchange=exchange_name, routing_key=self._routing_key, body=message_body)
 
 
@@ -102,8 +102,7 @@ class Consumer:
         method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, no_ack=True)
         if method_frame is not None:
             self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-            body_text = body.decode("unicode_escape")
-            request = self._mapper_func(body_text)
+            # TODO: deserialize the message, hint decode to unicaode_escape first
             return request
         else:
             return None
