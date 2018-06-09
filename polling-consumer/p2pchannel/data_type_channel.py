@@ -160,23 +160,27 @@ def polling_consumer(cancellation_queue: Queue, request_class: Type[Request], ma
     :param host_name: Where is the RMQ exchange
     :return:
     """
-    with Consumer(request_class, mapper_func, host_name) as channel:
-        while True:
-            message = channel.receive()
-            if message is not None:
-                print("Received message", json.dumps(vars(message)))
-            else:
-                print("Did not receive message")
 
-            # This will block whilst it waits for a cancellation token; we don't want to wait long
-            try:
-                token = cancellation_queue.get(block=True, timeout=0.1)
-                if token is cancellation_token:
-                    print("Stop instruction received")
-                    break
-            except Empty:
-                time.sleep(0.5)  # yield between messages
-                continue
+        """
+        TODO:
+            create a consumer
+            while true
+                get a message from the channel
+                    if we have a message
+                        json dumps the message
+                    else
+                        print no message
+                try
+                    get a token from the cancellation queue, block until we get one or timeout after 0.1s
+                    if we get a token 
+                        terminate
+                catch
+                    empty queue
+                    yield
+            clean up the consumer resources
+        """
+
+
 
 
 
