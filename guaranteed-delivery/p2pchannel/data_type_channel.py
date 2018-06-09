@@ -70,9 +70,7 @@ class Producer:
         :param message: The message we want to send
         """
         message_body = self._mapper_func(message)
-        self._channel.basic_publish(exchange=exchange_name, routing_key=self._routing_key, body=message_body,
-                                    properties=pika.BasicProperties(delivery_mode=2)  # make message persistent
-                                    )
+        # TODO publish using the basic properties to make the message persistent
 
 
 class Consumer:
