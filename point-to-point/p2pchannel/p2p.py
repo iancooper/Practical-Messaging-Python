@@ -26,8 +26,9 @@ class p2p:
         """
         self._connection = pika.BlockingConnection(parameters=self._connection_parameters)
         self._channel = self._connection.channel()
-        self._channel.exchange_declare(exchange=p2p.exchange_name, exchange_type='direct', durable=False, auto_delete=False)
-        self._channel.queue_declare(queue=self._queue_name, durable=False, exclusive=False, auto_delete=False)
+
+        # TODO: Declare an exchange, with exchange_name, type direct, non-durable, and not auto-delete on the channel
+        # TODO: Declare a queue with _queue_name, non-durable, non-exclusive, and not auto-delete
 
         return self
 
@@ -43,7 +44,7 @@ class p2p:
         We use the basic publish approach to sending over the channel. Our routing key is the queue name
         :param message: The message we want to send
         """
-        self._channel.basic_publish(exchange=p2p.exchange_name, routing_key=self._routing_key, body=message)
+        # TODO: publish the message to the exchange using _routing_key n the channel
 
     def receive(self) -> str:
         """
@@ -51,11 +52,13 @@ class p2p:
         exists
         :return: The message or None if we could not read from the queue
         """
-        method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, no_ack=True)
-        if method_frame is not None:
-            self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-            return body
-        else:
+
+        # TODO: use basic_get on the channel to retrieve a message from the queue not using auto_ack
+        # method_frame, header_frame, body =
+        # if method_frame is not None:
+        #    self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        #    return body
+        #else:
             return None
 
 
