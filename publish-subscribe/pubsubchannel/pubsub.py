@@ -34,12 +34,13 @@ class pubsub:
         """
         self._connection = pika.BlockingConnection(parameters=self._connection_parameters)
         self._channel = self._connection.channel()
-        self._channel.exchange_declare(exchange=pubsub.exchange_name, exchange_type='fanout', durable=False, auto_delete=False)
+
+        # TODO; Declare a fanout exchange, non-durable, and not auto-deleting
 
         if self._channel_type == ChannelType.Subscriber:
-            result = self._channel.queue_declare(durable=False, exclusive=True, auto_delete=True)
-            self._queue_name = result.method.queue
-            self._channel.queue_bind(exchange=pubsub.exchange_name, queue=self._queue_name)
+            # TODO: Declare a non-durable queue, exclusive and auto-deleting with no name
+            # TODO: Get the random queue name from the result of the queue creation operation
+            # TODO: Bind the queue to the exchante with the returned queue name
 
         return self
 
@@ -56,7 +57,8 @@ class pubsub:
         fanout exchange sends our message to every queue that we have on the exchange
         :param message: The message we want to send
         """
-        self._channel.basic_publish(exchange=pubsub.exchange_name, routing_key="", body=message)
+
+        # TODO: Publish the message with an empty routing key
 
     def receive(self) -> str:
         """
