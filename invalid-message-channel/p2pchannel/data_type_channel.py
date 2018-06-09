@@ -45,14 +45,14 @@ class Producer:
         invalid_routing_key = 'invalid.' + self._routing_key
         invalid_queue_name = invalid_routing_key
 
-        args = {'x-dead-letter-exchange': invalid_message_exchange_name, 'x-dead-letter-routing-key': invalid_routing_key}
+        # TODO: create an args dictionary with invalid message exchange and routing keys
 
-        self._channel.queue_declare(queue=self._queue_name, durable=False, exclusive=False, auto_delete=False, arguments=args)
+        # TODO: Create the consumer queue, but pass in the args for the invalid message exchange
         self._channel.queue_bind(exchange=exchange_name, routing_key=self._routing_key, queue=self._queue_name)
 
-        self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
-        self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
-        self._channel.queue_bind(exchange=invalid_message_exchange_name, routing_key=invalid_routing_key, queue=invalid_queue_name)
+        # TODO: Declare an invalid message queue exchange, direct and durable
+        # TODO: declare an invalid message queue, durable
+        # TODO: bind the queue to the exchange
 
         return self
 
@@ -101,13 +101,14 @@ class Consumer:
         invalid_routing_key = 'invalid.' + self._routing_key
         invalid_queue_name = invalid_routing_key
 
-        args = {'x-dead-letter-exchange': invalid_message_exchange_name, 'x-dead-letter-routing-key': invalid_routing_key}
+        # TODO: create an args dictionary with invalid message exchange and routing keys
 
-        self._channel.queue_declare(queue=self._queue_name, durable=False, exclusive=False, auto_delete=False, arguments=args)
+        # TODO: Create the consumer queue, but pass in the args for the invalid message exchange
         self._channel.queue_bind(exchange=exchange_name, routing_key=self._routing_key, queue=self._queue_name)
 
-        self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
-        self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
+        # TODO: Declare an invalid message queue exchange, direct and durable
+        # TODO: declare an invalid message queue, durable
+        # TODO: bind the queue to the exchange
 
         return self
 
