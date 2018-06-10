@@ -22,7 +22,7 @@ class Step:
 class RoutingSlip(Request):
     def __init__(self):
         self.steps = {}  # type:  Dict[int, Step]
-        self.current_step = 1
+        self.current_step = 0
 
 
 class Producer:
@@ -218,18 +218,24 @@ def routing_step(cancellation_queue: Queue, source_routing_key, deserializer_fun
     :param host_name: Where is the RMQ exchange
     :return:
     """
+
+
     with Consumer(source_routing_key, deserializer_func, host_name) as in_channel:
         while True:
-            in_message = in_channel.receive()
-            if in_message is not None:
-                next_step = in_message.current_step
-                routing_list = in_message.steps
-                if next_step in routing_list:
-                    with Producer(in_message[next_step].routing_key, serializer_func) as out_channel:
-                        out_message = operation_func(in_message)
-                        out_channel.send(out_message)
-                        print("Sent Message: ", json.dumps(vars(out_message)))
-            else:
+    """
+        TODO:
+        receive a message from the channel
+        if we have a valid message
+            find the current step in the message and increment to next step
+            look for the next step in the list of steps
+            If we find a next step
+                create a producer
+                create the out_message via the operator_func from the in_message
+                Set the next step on the out_message
+                send the out message
+    
+    """
+           else:
                 print("Did not receive message")
 
             # This will block whilst it waits for a cancellation token; we don't want to wait long
