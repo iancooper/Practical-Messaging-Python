@@ -116,8 +116,8 @@ class Consumer:
         self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
         self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
 
+        # TODO: Set the prefetch count to 1 so that with competing consumers each on grabs just one message
         # We set this to enforce fairness amongst consumers
-        self._channel.basic_qos(prefetch_count=1)
 
         return self
 
