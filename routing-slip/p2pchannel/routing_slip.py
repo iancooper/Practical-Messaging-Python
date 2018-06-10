@@ -22,7 +22,7 @@ class Step:
 class RoutingSlip(Request):
     def __init__(self):
         self.steps = {}  # type:  Dict[int, Step]
-        self.current_step = 1
+        self.current_step = 0
 
 
 class Producer:
@@ -222,11 +222,12 @@ def routing_step(cancellation_queue: Queue, source_routing_key, deserializer_fun
         while True:
             in_message = in_channel.receive()
             if in_message is not None:
-                next_step = in_message.current_step
+                next_step = in_message.current_step + 1
                 routing_list = in_message.steps
                 if next_step in routing_list:
                     with Producer(in_message[next_step].routing_key, serializer_func) as out_channel:
                         out_message = operation_func(in_message)
+                        out_message.current_step = next_step
                         out_channel.send(out_message)
                         print("Sent Message: ", json.dumps(vars(out_message)))
             else:
