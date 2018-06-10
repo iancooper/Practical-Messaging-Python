@@ -28,6 +28,7 @@ class p2p:
         self._channel = self._connection.channel()
         self._channel.exchange_declare(exchange=p2p.exchange_name, exchange_type='direct', durable=False, auto_delete=False)
         self._channel.queue_declare(queue=self._queue_name, durable=False, exclusive=False, auto_delete=False)
+        self._channel.queue_bind(queue=self._queue_name, exchange=p2p.exchange_name, routing_key=self._queue_name)
 
         return self
 
