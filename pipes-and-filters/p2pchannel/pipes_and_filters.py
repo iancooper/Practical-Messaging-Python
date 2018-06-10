@@ -196,25 +196,23 @@ def filter(cancellation_queue: Queue, input_class: Type[Request], deserializer_f
     :param host_name: Where is the RMQ exchange
     :return:
     """
-    with Consumer(input_class, deserializer_func, host_name) as in_channel:
-        while True:
-            in_message = in_channel.receive()
-            if in_message is not None:
-                with Producer(output_class, serializer_func) as out_channel:
-                    out_message = operation_func(in_message)
-                    out_channel.send(out_message)
-                    print("Sent Message: ", json.dumps(vars(out_message)))
-            else:
-                print("Did not receive message")
 
-            # This will block whilst it waits for a cancellation token; we don't want to wait long
-            try:
-                token = cancellation_queue.get(block=True, timeout=0.1)
-                if token is cancellation_token:
-                    print("Stop instruction received")
-                    break
-            except Empty:
-                time.sleep(0.5)  # yield between messages
-                continue
+    """
+        TODO: 
+        Create a consumer as in the input channel
+        while true
+            receive a message from the in channel
+            if we get a message
+            create a producer on the out channel
+                modify the input to create the ouput by calling operation_func
+                send the message on the out channel
+            else
+                check for a cancellation token on the queue hint: token = cancellation_queue.get(block=True, timeout=0.1)
+                exit if cancellation
+                else yield for 0.5s
+            dispose of the producer
+        dispose of the consumer
+    
+    """
 
 
