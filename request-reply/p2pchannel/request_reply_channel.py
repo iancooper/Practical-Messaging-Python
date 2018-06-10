@@ -96,43 +96,41 @@ class Producer:
        :param message: The message we want to send
         """
 
-        # declare a queue for replies, we can auto-delete this as it should die with us
+
+        # TODO declare a queue for replies, we can auto-delete this as it should die with us
         result = self._channel.queue_declare(durable=False, exclusive=True, auto_delete=True)
-        # auto-generate a queue name; we don't need a routing key as we just send/receive from this queue
+        # TODO auto-generate a queue name; we don't need a routing key as we just send/receive from this queue
         callback_queue_name = result.method.queue
 
         # Note that we do not need bind to the default exchange; any queue declared on the default exchange
         # automatically has a routing key that is the queue name. Because we choose a random
         # queue name this means we avoid any collisions
+
+        # TODO: serialize the message body
         message_body = self._serializer_func(message)
 
-        # on the basic properties for the message, set the callback queue
+        # TODO: publish. on On
+        # TODO: the basic properties for the message, set the callback queue,and persistence, and a correlation id
         self._channel.basic_publish(exchange=exchange_name, routing_key=self._routing_key, body=message_body,
                                     properties=pika.BasicProperties(delivery_mode=2, reply_to=callback_queue_name, correlation_id=str(uuid4()))
                                     )
 
-        response = None
-        # This is a blocking call, so we always need to timeout so that the blocked resources will be freed if there
-        # is a failure. Network calls are not reliable, so we must account for failure
-        end_time = datetime.utcnow() + timedelta(milliseconds=timeout_milliseconds)
-        while datetime.utcnow() < end_time:
-            method_frame, header_frame, body = self._channel.basic_get(queue=callback_queue_name, no_ack=False)
-            if method_frame is not None:
-                self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-                body_text = body.decode("unicode_escape")
-                try:
-                    response = self._deserializer_func(body_text)
-                except TypeError:
-                    self._channel.basic_nack(delivery_tag=method_frame.delivery_tag, requeue=False)
-                break
-            else:
-                # yield, but not for too long as we do timeout
-                interval = timeout_milliseconds/5
-                time.sleep(interval/1000)
+        """
+        while we are not past the timeout
+            try to read from the queue
+            if we have a message then
+                ack the message 
+                decode the message hint: unicode escape
+                deserialize into a response type
+            else
+                yield for a short interval but not too long, remember the timeout
+                
+        delete the queue when done
+        return the response
+                
+            
+        """
 
-        # we create a queue per call, so delete immediately to free resource
-        self._channel.queue_delete(queue=callback_queue_name)
-        return response
 
 
 class RequestReplyConsumer:
@@ -191,21 +189,17 @@ class RequestReplyConsumer:
         We ignored this in prior exercises, because 'it just worked' but now we care about it
         :return: The message or None if we could not read from the queue
         """
-        method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, no_ack=False)
-        if method_frame is not None:
-            self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-            body_text = body.decode("unicode_escape")
-            try:
-                request = self._mapper_func(body_text)
-                request.reply_to = header_frame.reply_to
-                request.correlation_id = header_frame.correlation_id
-                return request
-            except TypeError as te:
-                print("Exception decoding message {}", te)
-                self._channel.basic_nack(delivery_tag=method_frame.delivery_tag, requeue=False)
 
-        return None
-
+        """
+            TODO:
+            Deserialize the message
+            If you have a message then
+                Ack the message
+                Decode the message body hint: unicode_escape
+                Deserialize the message into a request type 
+                Set the reply to header on the response properties to the request
+                Set the correlation id on the request
+        """
 
 class RequestReplyResponder:
     def __init__(self, serializer_func: Callable[[Response], str], host_name: str= 'localhost'):
@@ -239,8 +233,9 @@ class RequestReplyResponder:
         :param response: The response
         :return: None
         """
-        message_body = self._serializer_func(response)
-        self._channel.basic_publish(exchange="", routing_key=reply_to, body=message_body)
+
+        # Serialize the message body from the response
+        # publish the message
 
 
 cancellation_token = object()
@@ -264,18 +259,14 @@ def polling_consumer(cancellation_queue: Queue, request_class: Type[Request], se
     """
     with RequestReplyConsumer(request_class, serializer_func, host_name) as channel:
         while True:
-            message = channel.receive()
-            if message is not None:
-                print("Received message", json.dumps(vars(message)))
-                response = handler_func(message)
 
-                print("Responding on queue {} with correlation id {}".format(message.reply_to, str(message.correlation_id)))
-                with RequestReplyResponder(deserializer_func, host_name) as responder:
-                    responder.respond(message.reply_to, response)
-                print('Responded on queue {} at: {}'.format(message.reply_to, datetime.utcnow()))
-
-            else:
-                print("Did not receive message")
+            """
+                Try to receive a message on the channel
+                If we get a message then:
+                    handle the message 
+                    create a request responder hint: with
+                        respond with the response from the handler, to the reply_to address
+            """
 
             # This will block whilst it waits for a cancellation token; we don't want to wait long
             try:
