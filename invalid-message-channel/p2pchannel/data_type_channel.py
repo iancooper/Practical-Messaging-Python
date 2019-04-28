@@ -108,6 +108,7 @@ class Consumer:
 
         self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
         self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
+        self._channel.queue_bind(exchange=invalid_message_exchange_name, routing_key=invalid_routing_key, queue=invalid_queue_name)
 
         return self
 
