@@ -118,6 +118,7 @@ class Consumer:
 
         return self
 
+
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """
         We must kill the connection, we chose to kill the channel too
@@ -132,7 +133,7 @@ class Consumer:
         We ignored this in prior exercises, because 'it just worked' but now we care about it
         :return: The message or None if we could not read from the queue
         """
-        method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, no_ack=False)
+        method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, auto_ack=False)
         if method_frame is not None:
             self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
             body_text = body.decode("unicode_escape")
