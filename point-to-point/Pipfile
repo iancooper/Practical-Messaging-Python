@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-pika = "==0.11.2"
+pika = "==1.1.0"
 
 [requires]
-python_version = "3.7"
+python_version = "3.7.2"
