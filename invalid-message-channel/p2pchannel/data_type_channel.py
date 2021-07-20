@@ -128,10 +128,10 @@ class Consumer:
         """
         method_frame, header_frame, body = self._channel.basic_get(queue=self._queue_name, auto_ack=False)
         if method_frame is not None:
-            self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
             body_text = body.decode("unicode_escape")
             try:
                 request = self._mapper_func(body_text)
+                self._channel.basic_ack(delivery_tag=method_frame.delivery_tag)
                 return request
             except TypeError:
                 self._channel.basic_nack(delivery_tag=method_frame.delivery_tag, requeue=False)
