@@ -11,12 +11,18 @@ invalid_message_exchange_name = "practical-messaging-invalid"
 class Request:
     pass
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"
+
 
 class Step:
     def __init__(self, order: int=None, routing_key: str=None):
         self.order = order
         self.completed = False
         self.routing_key = routing_key
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"
 
 
 class RoutingSlip(Request):
