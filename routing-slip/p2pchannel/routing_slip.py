@@ -11,12 +11,18 @@ invalid_message_exchange_name = "practical-messaging-invalid"
 class Request:
     pass
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"
+
 
 class Step:
     def __init__(self, order: int=None, routing_key: str=None):
         self.order = order
         self.completed = False
         self.routing_key = routing_key
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"
 
 
 class RoutingSlip(Request):
@@ -220,16 +226,18 @@ def routing_step(cancellation_queue: Queue, source_routing_key, deserializer_fun
     """
     with Consumer(source_routing_key, deserializer_func, host_name) as in_channel:
         while True:
-            in_message = in_channel.receive()
-            if in_message is not None:
-                next_step = in_message.current_step + 1
-                routing_list = in_message.steps
-                if next_step in routing_list:
-                    with Producer(in_message[next_step].routing_key, serializer_func) as out_channel:
-                        out_message = operation_func(in_message)
-                        out_message.current_step = next_step
-                        out_channel.send(out_message)
-                        print("Sent Message: ", json.dumps(vars(out_message)))
+            message = in_channel.receive()
+            if message:
+                nex_step_id = message.current_step + 1
+                try:
+                    next_step = message.steps[nex_step_id]
+                    enriched_message = operation_func(message)
+                    enriched_message.current_step = nex_step_id
+                    with Producer(next_step.routing_key, serializer_func, host_name) as producer:
+                        producer.send(enriched_message)
+                        print(f"Sent {enriched_message} to {next_step.routing_key}")
+                except IndexError:
+                    pass
             else:
                 print("Did not receive message")
 
@@ -242,5 +250,3 @@ def routing_step(cancellation_queue: Queue, source_routing_key, deserializer_fun
             except Empty:
                 time.sleep(0.5)  # yield between messages
                 continue
-
-
