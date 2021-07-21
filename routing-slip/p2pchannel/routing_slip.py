@@ -11,12 +11,18 @@ invalid_message_exchange_name = "practical-messaging-invalid"
 class Request:
     pass
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"
+
 
 class Step:
     def __init__(self, order: int=None, routing_key: str=None):
         self.order = order
         self.completed = False
         self.routing_key = routing_key
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"
 
 
 class RoutingSlip(Request):
@@ -222,22 +228,21 @@ def routing_step(cancellation_queue: Queue, source_routing_key, deserializer_fun
 
     with Consumer(source_routing_key, deserializer_func, host_name) as in_channel:
         while True:
-    """
-        TODO:
-        receive a message from the channel
-        if we have a valid message
-            find the current step in the message and increment to next step
-            look for the next step in the list of steps
-            If we find a next step
-                create a producer
-                create the out_message via the operator_func from the in_message
-                Set the next step on the out_message
-                send the out message
-    
-    """
-           else:
-                print("Did not receive message")
+            """
+                TODO:
+                receive a message from the channel
+                if we have a valid message
+                    find the current step in the message and increment to next step
+                    look for the next step in the list of steps
+                    If we find a next step
+                        create a producer
+                        create the out_message via the operator_func from the in_message
+                        Set the next step on the out_message
+                        send the out message
 
+            """
+            else:
+                print("Did not receive message")
             # This will block whilst it waits for a cancellation token; we don't want to wait long
             try:
                 token = cancellation_queue.get(block=True, timeout=0.1)
