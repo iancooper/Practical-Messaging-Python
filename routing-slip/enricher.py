@@ -1,28 +1,33 @@
 import json
+import time
 from queue import Queue
 from threading import Thread
-import time
 from typing import Dict
 from uuid import UUID
 
-from p2pchannel.routing_slip import routing_step, cancellation_token
 from model.greeting import Greeting, enricher_routing_key
+from p2pchannel.routing_slip import routing_step, cancellation_token
 
 
 def deserialize_message(in_message: str) -> Greeting:
-    def _unserialize_instance(d: Dict) -> object:
-        for key, value in d.items():
-            if isinstance(value, str):  # We need to check if the string on the wire is actually a UUID, by conversion
-                try:
-                    guid = UUID(value)
-                    value = guid
-                except ValueError:
-                    pass
-            setattr(greeting, key, value)
-        return greeting
+    message_dict = json.loads(in_message)
 
-    greeting = Greeting()
-    return json.loads(in_message, object_hook=_unserialize_instance)
+    def _recursive(message_dict, base_class=Greeting):
+        steps = []
+        instance = base_class()
+        for k, v in message_dict.items():
+            if _isint(k):
+                steps.append(_recursive(v, Step))
+            elif isinstance(v, dict):
+                setattr(instance, k, _recursive(v))
+            else:
+                setattr(instance, k, v)
+        if steps:
+            return sorted(steps, key=lambda step: step.order)
+        else:
+            return instance
+
+    return _recursive(message_dict)
 
 
 def serialize_message(out_message: Greeting) -> str:
