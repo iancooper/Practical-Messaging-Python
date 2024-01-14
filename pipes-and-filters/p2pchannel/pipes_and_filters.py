@@ -19,7 +19,7 @@ class Producer:
         We assume a number of defaults: usr:guest pwd:guest port:5672 vhost: /
         We use the request class to get the name of the routing key. We could use any approach to agree a routing key
         between producer and consumer, but using the name of the type that the queue is of makes a certain sense
-        We name the queue after the routing key because we are building a point-to-point channel with a single consudmer
+        We name the queue after the routing key because we are building a point-to-point channel with a single consumer
         We split the producer and consumer because one serializes and the other deserializes and we do not wish to make
         a single DataType channel class with both dependencies
         :param request_class: The type on this channel derived from Request
@@ -153,7 +153,7 @@ cancellation_token = object()
 
 def polling_consumer(cancellation_queue: Queue, request_class: Type[Request], mapper_func: Callable[[str], Request], host_name: str= 'localhost') -> None:
     """
-    Intended to be called from a thread, we consumer messages in a loop, with a delay between reads from the queue in order
+    Intended to be called from a thread, we consume messages in a loop, with a delay between reads from the queue in order
     to allow the CPU to service other requests, including the supervisor which may want to signal that we should quit
     We use a queue to signal cancellation - the cancellation token is put into the queue and a consumer checks for it
     after every loop
@@ -186,7 +186,7 @@ def filter(cancellation_queue: Queue, input_class: Type[Request], deserializer_f
            output_class: Type[Request], operation_func: Callable[[Request], Request], serializer_func: Callable[[Request], str],
            host_name: str= 'localhost') -> None:
     """
-    Intended to be called from a thread, we consumer messages in a loop, with a delay between reads from the queue in order
+    Intended to be called from a thread, we consume messages in a loop, with a delay between reads from the queue in order
     to allow the CPU to service other requests, including the supervisor which may want to signal that we should quit
     We use a queue to signal cancellation - the cancellation token is put into the queue and a consumer checks for it
     after every loop
