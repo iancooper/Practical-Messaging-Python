@@ -31,12 +31,10 @@ class StreamProducer:
         :param bootstrap_server: The bootstrap server for the Kafka broker, defaults to "localhost:9092"
         """
         self.conf = {
-            'bootstrap.servers': bootstrap_server,  # Replace with your Kafka bootstrap servers
-            'enable.idempotence': True,  # Remove duplicates
-            'acks': 'all',  # Ensure all nodes have the message
-            'retries': 3,  # Retry 3 times
-            'max.in.flight.requests.per.connection': 5,  # We can live without strict ordering (value of 1)
+            # TODO: Create a dict of config properties for Kafka
+            # bootstrap.servers should be localhost:9092 (see param)
         }
+
 
         # Kafka topic
         self.topic = "Pub-Sub-Stream-" + request_class.__name__
@@ -44,7 +42,8 @@ class StreamProducer:
 
     def __enter__(self) -> 'StreamProducer':
         """ A context manager that allows us to ensure shutdown of the Kafka producer"""
-        self.producer = Producer(self.conf)
+
+        # Create a Kafka producer, from self.conf
         return self
 
     def __exit__(
@@ -56,7 +55,9 @@ class StreamProducer:
         """
         Ensure that the producer is flushed
         """
-        self.producer.flush()
+
+        # TODO: Flush the producer
+
         return False
 
     def send(self, message: Record) -> None:
@@ -66,9 +67,9 @@ class StreamProducer:
         need the addition of an Outbox
         """
 
-        self.producer.produce(self.topic, key=message.id.encode('utf-8'),
-                              value=self.mapper_func(message).encode('utf-8'),
-                              callback=delivery_report)
+        # produce a message to the producer with a key of the message id and value equal to serializing the message
+        # itself; register a callback for delivery_report (above), which you will receive when the message has been acked
+        # by the broker
 
 
 def commit_callback(kafka_error, topic_partition):
@@ -92,18 +93,23 @@ class StreamConsumer:
         self.topic = "Pub-Sub-Stream-" + request_class.__name__
         self.mapper_func = mapper_func
 
+
+
         self.config = {
-            'bootstrap.servers': bootstrap_server,
-            'group.id': 'pub-sub-stream',
-            'enable.auto.commit': False,
-            'auto.offset.reset': 'earliest',
-            'on_commit': commit_callback,
+            # TODO: Create a dict of config properties for Kafka
+            # bootstrap.servers should be localhost:9092 (see param)
+            # group id should be 'pub-sub-stream'
+            # enable auto commit to false - we want to commit after successfully handling the message
+            # auto offset reset to earliest - what Kafka should use as the offset for a new to partition
+            # on  commit set the commit_callback above to track commits
         }
 
     def __enter__(self) -> 'StreamConsumer':
         """ A context manager that allows us to ensure shutdown of the Kafka consumer"""
-        self.consumer = Consumer(self.config)
-        self.consumer.subscribe([self.topic])
+
+        # TODO: Create a Consumer from self.conf above
+
+        # TODO: Subscribe the consumer to self.topic
         return self
 
     def __exit__(
@@ -119,7 +125,8 @@ class StreamConsumer:
         return False
 
     def receive(self) -> (Record, Message):
-        msg: Message = self.consumer.poll(timeout=1.0)
+
+        # listen tof a message from Kakf using the poll method
         try:
             if msg is not None:
                 record = self.mapper_func(msg.value())
@@ -130,7 +137,7 @@ class StreamConsumer:
             return None, None
 
     def commit(self, msg):
-        self.consumer.commit(message=msg, asynchronous=True)
+        # TODO: Commit the message, use the asynchronous flag
 
 
 cancellation_token = object()
