@@ -11,6 +11,7 @@ class Record:
     def __init__(self, id: str):
         self.id = id
 
+
 def delivery_report(err: object, msg: Any):
     if err is not None:
         print('Message delivery failed: {}'.format(err))
