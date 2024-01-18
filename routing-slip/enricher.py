@@ -6,7 +6,15 @@ from typing import Dict
 from uuid import UUID
 
 from model.greeting import Greeting, enricher_routing_key
-from p2pchannel.routing_slip import routing_step, cancellation_token
+from p2pchannel.routing_slip import routing_step, cancellation_token, Step
+
+
+def _isint(v: str) -> bool:
+    try:
+        int(v)
+        return True
+    except ValueError:
+        return False
 
 
 def deserialize_message(in_message: str) -> Greeting:

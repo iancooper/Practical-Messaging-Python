@@ -13,7 +13,7 @@ def map_to_message(greeting: Greeting) -> str:
         d = {}
         d.update(vars(obj))
         for key, value in d.items():
-            if isinstance(value, UUID):  # json does not know how to serliaze a UUID, so convince it is a string instead
+            if isinstance(value, UUID):  # json does not know how to serialize a UUID, so convince it is a string instead
                 d[key] = str(value)
         return d
 

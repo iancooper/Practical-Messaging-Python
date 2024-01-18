@@ -45,6 +45,9 @@ class Producer:
         invalid_routing_key = 'invalid.' + self._routing_key
         invalid_queue_name = invalid_routing_key
 
+        # NOTE: If you are working through the exercises, you will need to delete the old queue as it will have
+        # different properties
+
         # TODO: create an args dictionary with invalid message exchange and routing keys
 
         # TODO: Create the consumer queue, but pass in the args for the invalid message exchange

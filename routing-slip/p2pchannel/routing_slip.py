@@ -224,8 +224,6 @@ def routing_step(cancellation_queue: Queue, source_routing_key, deserializer_fun
     :param host_name: Where is the RMQ exchange
     :return:
     """
-
-
     with Consumer(source_routing_key, deserializer_func, host_name) as in_channel:
         while True:
             """

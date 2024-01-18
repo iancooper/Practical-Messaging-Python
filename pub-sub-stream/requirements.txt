@@ -1,0 +1,2 @@
+confluent-kafka==2.3.0
+mysqlclient==2.2.1

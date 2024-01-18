@@ -4,7 +4,7 @@ import time
 from typing import Dict
 from uuid import UUID
 
-from p2pchannel.work_queues import Producer
+from p2pchannel.pipes_and_filters import Producer
 from model.greeting import Greeting
 
 

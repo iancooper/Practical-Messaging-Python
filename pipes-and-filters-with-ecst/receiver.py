@@ -5,11 +5,11 @@ import time
 from typing import Dict
 from uuid import UUID
 
-from p2pchannel.work_queues import polling_consumer, cancellation_token
-from model.greeting import Greeting
+from p2pchannel.pipes_and_filters import polling_consumer, cancellation_token
+from model.greeting import EnrichedGreeting
 
 
-def map_from_message(message_body: str) -> Greeting:
+def map_from_message(message_body: str) -> EnrichedGreeting:
     def _unserialize_instance(d: Dict) -> object:
         for key, value in d.items():
             if isinstance(value, str):  # We need to check if the string on the wire is actually a UUID, by conversion
@@ -21,13 +21,13 @@ def map_from_message(message_body: str) -> Greeting:
             setattr(greeting, key, value)
         return greeting
 
-    greeting = Greeting()
+    greeting = EnrichedGreeting()
     return json.loads(message_body, object_hook=_unserialize_instance)
 
 
 def run():
     cancellation_queue = Queue()
-    polling_loop = Thread(target=polling_consumer, args=(cancellation_queue, Greeting, map_from_message, 'localhost'), daemon=True)
+    polling_loop = Thread(target=polling_consumer, args=(cancellation_queue, EnrichedGreeting, map_from_message, 'localhost'), daemon=True)
 
     polling_loop.start()
 

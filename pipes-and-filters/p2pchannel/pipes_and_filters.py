@@ -19,7 +19,7 @@ class Producer:
         We assume a number of defaults: usr:guest pwd:guest port:5672 vhost: /
         We use the request class to get the name of the routing key. We could use any approach to agree a routing key
         between producer and consumer, but using the name of the type that the queue is of makes a certain sense
-        We name the queue after the routing key because we are building a point-to-point channel with a single consudmer
+        We name the queue after the routing key because we are building a point-to-point channel with a single consumer
         We split the producer and consumer because one serializes and the other deserializes and we do not wish to make
         a single DataType channel class with both dependencies
         :param request_class: The type on this channel derived from Request
@@ -45,18 +45,9 @@ class Producer:
         self._channel = self._connection.channel()
         self._channel.exchange_declare(exchange=exchange_name, exchange_type='direct', durable=True, auto_delete=False)
 
-        invalid_routing_key = 'invalid.' + self._routing_key
-        invalid_queue_name = invalid_routing_key
-
-        args = {'x-dead-letter-exchange': invalid_message_exchange_name, 'x-dead-letter-routing-key': invalid_routing_key}
-
-        # If we are going to use persistent messages it makes sense to have a durable queue definition
-        self._channel.queue_declare(queue=self._queue_name, durable=True, exclusive=False, auto_delete=False, arguments=args)
-        self._channel.queue_bind(exchange=exchange_name, routing_key=self._routing_key, queue=self._queue_name)
-
-        self._channel.exchange_declare(exchange=invalid_message_exchange_name, exchange_type='direct', durable=True, auto_delete=False)
-        self._channel.queue_declare(queue=invalid_queue_name, durable=True, exclusive=False, auto_delete=False)
-        self._channel.queue_bind(exchange=invalid_message_exchange_name, routing_key=invalid_routing_key, queue=invalid_queue_name)
+        # We don't declare the queue from the Producer as it should not be aware of its consumers, but this means
+        # that we should run the consumer first, to ensure that there is a queue to recieve the message, or else
+        # the  message will drop
 
         return self
 
@@ -153,7 +144,7 @@ cancellation_token = object()
 
 def polling_consumer(cancellation_queue: Queue, request_class: Type[Request], mapper_func: Callable[[str], Request], host_name: str= 'localhost') -> None:
     """
-    Intended to be called from a thread, we consumer messages in a loop, with a delay between reads from the queue in order
+    Intended to be called from a thread, we consume messages in a loop, with a delay between reads from the queue in order
     to allow the CPU to service other requests, including the supervisor which may want to signal that we should quit
     We use a queue to signal cancellation - the cancellation token is put into the queue and a consumer checks for it
     after every loop
@@ -186,7 +177,7 @@ def filter(cancellation_queue: Queue, input_class: Type[Request], deserializer_f
            output_class: Type[Request], operation_func: Callable[[Request], Request], serializer_func: Callable[[Request], str],
            host_name: str= 'localhost') -> None:
     """
-    Intended to be called from a thread, we consumer messages in a loop, with a delay between reads from the queue in order
+    Intended to be called from a thread, we consume messages in a loop, with a delay between reads from the queue in order
     to allow the CPU to service other requests, including the supervisor which may want to signal that we should quit
     We use a queue to signal cancellation - the cancellation token is put into the queue and a consumer checks for it
     after every loop
