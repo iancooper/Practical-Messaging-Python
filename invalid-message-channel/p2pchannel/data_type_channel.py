@@ -45,6 +45,9 @@ class Producer:
         invalid_routing_key = 'invalid.' + self._routing_key
         invalid_queue_name = invalid_routing_key
 
+        # NOTE: If you are working through the exercises, you will need to delete the old queue as it will have
+        # different properties
+
         args = {'x-dead-letter-exchange': invalid_message_exchange_name, 'x-dead-letter-routing-key': invalid_routing_key}
 
         self._channel.queue_declare(queue=self._queue_name, durable=False, exclusive=False, auto_delete=False, arguments=args)

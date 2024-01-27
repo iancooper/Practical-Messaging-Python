@@ -118,7 +118,7 @@ class StreamConsumer:
         return False
 
     def receive(self) -> (Record, Message):
-        msg: Message | None = self.consumer.poll(timeout=1.0)
+        msg: Message  = self.consumer.poll(timeout=1.0)
         try:
             if msg is not None:
                 record = self.mapper_func(msg.value())
