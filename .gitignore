@@ -103,3 +103,4 @@ ENV/
 # PyChamr
 .idea/
 
+pipes-and-filters/.idea/

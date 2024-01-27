@@ -93,8 +93,6 @@ class StreamConsumer:
         self.topic = "Pub-Sub-Stream-" + request_class.__name__
         self.mapper_func = mapper_func
 
-
-
         self.config = {
             # TODO: Create a dict of config properties for Kafka
             # bootstrap.servers should be localhost:9092 (see param)
